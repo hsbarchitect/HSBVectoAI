@@ -1,0 +1,6 @@
+INFO:     Started server process [17364]
+INFO:     Waiting for application startup.
+INFO:main:HSBVectoAI Backend starting up...
+WARNING:main:DB connection failed on startup (will retry on first request): [WinError 1225] Uzaktaki bilgisayar ağ bağlantısını reddetti
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)

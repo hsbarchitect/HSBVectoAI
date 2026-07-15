@@ -1,0 +1,19 @@
+﻿# Environments
+.env
+.venv
+env/
+venv/
+
+# Byte-compiled
+__pycache__/
+*.py[cod]
+
+# Next.js
+.next/
+node_modules/
+out/
+build/
+
+# Local settings
+.vscode/
+.idea/

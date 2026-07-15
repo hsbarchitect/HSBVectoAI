@@ -1,0 +1,28 @@
+# HSBVectoAI Backend — Dependencies
+# Requires Python 3.12 (pre-built wheels available)
+
+# Core
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+pydantic==2.10.3
+pydantic[email]==2.10.3
+pydantic-settings==2.7.0
+
+# Database
+sqlalchemy[asyncio]==2.0.36
+asyncpg==0.30.0
+
+# Auth / Security
+bcrypt==4.2.1
+python-jose[cryptography]==3.3.0
+
+# AI
+google-generativeai==0.8.3
+openai==1.57.4
+
+# Payments
+stripe==11.4.0
+
+# HTTP
+httpx==0.28.1
+
