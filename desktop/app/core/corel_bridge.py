@@ -57,26 +57,48 @@ class CorelDRAWBridge:
 
             if app.Documents.Count > 0:
                 doc = app.ActiveDocument
+                page = doc.ActivePage
+                
+                # Get width and height safely
+                width = 210.0
+                height = 297.0
+                try:
+                    width = doc.DrawingPageWidth * 25.4 / 72
+                    height = doc.DrawingPageHeight * 25.4 / 72
+                except Exception:
+                    try:
+                        width = page.SizeWidth
+                        height = page.SizeHeight
+                        if doc.Unit == 4:  # Inches
+                            width *= 25.4
+                            height *= 25.4
+                    except Exception:
+                        pass
+
                 ctx["document"] = {
                     "name": doc.Name,
-                    "width_mm": round(doc.DrawingPageWidth * 25.4 / 72, 1),
-                    "height_mm": round(doc.DrawingPageHeight * 25.4 / 72, 1),
+                    "width_mm": round(width, 1),
+                    "height_mm": round(height, 1),
                     "pages": doc.Pages.Count,
-                    "objects": doc.ActivePage.Shapes.Count,
+                    "objects": page.Shapes.Count if page else 0,
                 }
-                if app.ActiveSelection and app.ActiveSelection.Shapes.Count > 0:
-                    ctx["selection"] = {
-                        "count": app.ActiveSelection.Shapes.Count,
-                        "types": [
-                            s.Type for s in app.ActiveSelection.Shapes
-                        ],
-                    }
+                
+                try:
+                    if app.ActiveSelection and app.ActiveSelection.Shapes.Count > 0:
+                        ctx["selection"] = {
+                            "count": app.ActiveSelection.Shapes.Count,
+                            "types": [
+                                s.Type for s in app.ActiveSelection.Shapes
+                            ],
+                        }
+                except Exception:
+                    pass
             else:
                 ctx["document"] = None
 
             return ctx
         except Exception as e:
-            logger.debug(f"CorelDRAW context error: {e}")
+            logger.warning(f"CorelDRAW context error: {e}")
             return {"connected": False, "error": str(e)}
 
     def execute_action(self, action: dict) -> dict:
