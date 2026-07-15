@@ -19,8 +19,8 @@ PLANS = {
 
 # AI Models available
 AI_MODELS = {
-    "gemini-2.0-flash": {
-        "name": "Gemini 2.0 Flash",
+    "gemini-3.5-flash": {
+        "name": "Gemini 3.5 Flash",
         "provider": "google",
         "description": "Hızlı & ekonomik",
         "icon": "🔵",

@@ -41,17 +41,23 @@ class LicenseManager:
         self._license_data: Optional[dict] = None
         self._device_id = get_device_fingerprint()
 
+    def activate(self) -> bool:
+        """Register this device with the backend."""
+        try:
+            resp = requests.post(
+                f"{API_BASE_URL}/license/activate",
+                json={"device_id": self._device_id, "device_name": socket.gethostname()},
+                headers={"Authorization": f"Bearer {self._auth.token}"},
+                timeout=8,
+            )
+            return resp.status_code == 200
+        except Exception as e:
+            logger.exception("License activation failed")
+            return False
+
     def verify(self) -> dict:
         """
-        Verify license with backend.
-        Returns:
-            {
-                "valid": bool,
-                "plan": str,          # "starter" | "pro" | "studio"
-                "messages_left": int, # -1 = unlimited
-                "expires_at": str,
-                "error": str | None,
-            }
+        Verify license with backend. Auto-activates device if not registered.
         """
         if not self._auth.is_logged_in:
             return {"valid": False, "error": "Giriş yapılmamış."}
@@ -68,6 +74,12 @@ class LicenseManager:
                 self._license_data = data
                 return {**data, "valid": True}
             elif resp.status_code == 403:
+                detail = resp.json().get("detail", "")
+                if "cihaz kayıtlı değil" in detail.lower():
+                    logger.info("Device not registered. Attempting auto-activation...")
+                    if self.activate():
+                        # Retry verification after successful activation
+                        return self.verify()
                 return {"valid": False, "error": "Geçersiz lisans veya abonelik sona ermiş."}
             else:
                 return {"valid": False, "error": resp.json().get("detail", "Lisans doğrulanamadı.")}

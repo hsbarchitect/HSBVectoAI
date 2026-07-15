@@ -29,7 +29,10 @@ logger = logging.getLogger(__name__)
 
 # Supported models
 GEMINI_MODELS = {
+    "gemini-3.5-flash",
+    "gemini-2.5-flash",
     "gemini-2.0-flash",
+    "gemini-1.5-flash",
     "gemini-2.0-flash-lite",
     "gemini-1.5-pro",
 }
@@ -41,7 +44,7 @@ OPENAI_MODELS = {
 
 
 class ChatRequest(BaseModel):
-    model: str = "gemini-2.0-flash"
+    model: str = "gemini-1.5-flash"
     messages: list[dict]               # [{role: user|assistant, content: str}]
     system_prompt: str | None = None   # ignored — backend uses its own system prompt
     corel_context: dict = {}
@@ -57,6 +60,11 @@ async def _sse_generator(
 ) -> AsyncGenerator[str, None]:
     """Yields SSE lines for streaming response."""
     full_reply = ""
+    
+    # Fallback to working model to prevent 404
+    if model in ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-2.5-flash"]:
+        model = "gemini-3.5-flash"
+        
     try:
         if model in GEMINI_MODELS:
             gen = stream_gemini(model, messages, corel_context)

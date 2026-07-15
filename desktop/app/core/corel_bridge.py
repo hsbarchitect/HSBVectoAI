@@ -25,14 +25,19 @@ class CorelDRAWBridge:
     """
 
     def __init__(self):
+        self._client = None
         self._available = self._check_availability()
 
     def _check_availability(self) -> bool:
         try:
-            import win32com.client
-            app = win32com.client.GetActiveObject("CorelDRAW.Application")
-            return app is not None
-        except Exception:
+            import pythoncom
+            pythoncom.CoInitialize()
+            from src.coreldraw.client import CorelDRAWClient
+            self._client = CorelDRAWClient.get()
+            self._client.ensure_connected()
+            return self._client.app is not None
+        except Exception as e:
+            logger.debug(f"Availability check failed: {e}")
             return False
 
     def refresh(self) -> bool:
@@ -41,11 +46,13 @@ class CorelDRAWBridge:
 
     def get_context(self) -> dict:
         """Return current CorelDRAW state as context dict for AI."""
-        if not self._available:
+        if not self._available or not self._client:
             return {"connected": False}
         try:
-            import win32com.client
-            app = win32com.client.GetActiveObject("CorelDRAW.Application")
+            import pythoncom
+            pythoncom.CoInitialize()
+            self._client.ensure_connected()
+            app = self._client.app
             ctx = {"connected": True, "version": str(app.Version)}
 
             if app.Documents.Count > 0:
