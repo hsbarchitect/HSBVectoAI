@@ -84,6 +84,23 @@ class AIClient:
             logger.exception("AI request failed")
             return {"success": False, "error": str(e)}
 
+    def _parse_actions(self, text: str) -> tuple[str, list]:
+        import json
+        if "[ACTIONS]" in text:
+            parts = text.split("[ACTIONS]")
+            clean_text = parts[0].strip()
+            actions_str = parts[1].strip()
+            try:
+                start = actions_str.find("[")
+                end = actions_str.rfind("]") + 1
+                if start != -1 and end != -1:
+                    actions = json.loads(actions_str[start:end])
+                    return clean_text, actions
+            except Exception as e:
+                logger.error(f"Failed to parse actions: {e}")
+            return clean_text, []
+        return text, []
+
     def _regular_request(self, payload: dict) -> dict:
         resp = requests.post(
             f"{API_BASE_URL}/ai/chat",
@@ -94,11 +111,12 @@ class AIClient:
         if resp.status_code == 200:
             data = resp.json()
             reply = data.get("reply", "")
-            self._history.append({"role": "assistant", "content": reply})
+            clean_reply, actions = self._parse_actions(reply)
+            self._history.append({"role": "assistant", "content": clean_reply})
             return {
                 "success": True,
-                "reply": reply,
-                "actions": data.get("actions", []),  # CorelDRAW commands to execute
+                "reply": clean_reply,
+                "actions": actions,
             }
         elif resp.status_code == 429:
             return {"success": False, "error": "Aylık mesaj limitinize ulaştınız. Planınızı yükseltin."}
@@ -122,10 +140,13 @@ class AIClient:
                     if chunk == "[DONE]":
                         break
                     full_reply += chunk
-                    on_chunk(chunk)
+                    # Don't send [ACTIONS] tokens to UI
+                    if "[ACTIONS]" not in full_reply:
+                        on_chunk(chunk)
 
-        self._history.append({"role": "assistant", "content": full_reply})
-        return {"success": True, "reply": full_reply, "actions": []}
+        clean_reply, actions = self._parse_actions(full_reply)
+        self._history.append({"role": "assistant", "content": clean_reply})
+        return {"success": True, "reply": clean_reply, "actions": actions}
 
     @property
     def model(self) -> str:
