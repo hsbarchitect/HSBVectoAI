@@ -44,14 +44,15 @@ async def stream_openai(
     client = AsyncOpenAI(api_key=settings.openai_api_key)
     full_messages = _build_messages(messages, corel_context)
 
-    async with client.chat.completions.stream(
+    response = await client.chat.completions.create(
         model=model_id,
         messages=full_messages,
-    ) as stream:
-        async for chunk in stream:
-            delta = chunk.choices[0].delta.content if chunk.choices else None
-            if delta:
-                yield delta
+        stream=True,
+    )
+    async for chunk in response:
+        delta = chunk.choices[0].delta.content if chunk.choices else None
+        if delta:
+            yield delta
 
 
 async def complete_openai(

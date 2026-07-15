@@ -7,8 +7,8 @@ APP_VERSION = "1.0.0"
 APP_DISPLAY_NAME = "HSBVectoAI — Smart Design for CorelDRAW"
 
 # Backend API
-API_BASE_URL = "https://api.hsbvectoai.com"  # Production
-# API_BASE_URL = "http://localhost:8000"       # Development
+# API_BASE_URL = "https://api.hsbvectoai.com"  # Production
+API_BASE_URL = "http://localhost:8000"       # Development
 
 # Subscription plans
 PLANS = {
